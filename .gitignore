@@ -1,0 +1,76 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# --- Virtual environments ---
+venv/
+.venv/
+env/
+ENV/
+
+# --- Environment / secrets ---
+.env
+.env.*
+!.env.example
+
+# --- FastAPI / uploads ---
+uploads/
+*.db
+*.sqlite3
+
+# --- Testing / coverage ---
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+.tox/
+
+# --- Type checking / linting ---
+.mypy_cache/
+.ruff_cache/
+.dmypy.json
+
+# --- Logs ---
+logs/
+*.log
+
+# --- Database dumps ---
+*.sql.gz
+*.dump
+pgdata/
+
+# --- LangSmith / LangChain cache ---
+.langchain/
+.langsmith/
+
+# --- Docker ---
+docker-compose.override.yml
+
+# --- IDEs ---
+.idea/
+.vscode/
+*.iml
+.DS_Store
+
+# --- Frontend (future) ---
+node_modules/
+.next/
+
+# --- OS ---
+Thumbs.db
+desktop.ini
+
+# --- Misc ---
+*.tmp
+*.bak
+.cache/
+
+.claude/
