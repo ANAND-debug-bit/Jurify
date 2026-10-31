@@ -22,6 +22,10 @@ router = APIRouter(prefix="/api/v1/documents", tags=["documents"])
 
 MAX_TEXT_CHARS = 20_000
 MAX_IMAGE_BYTES = 5 * 1024 * 1024  # 5 MB per API contract
+# Starlette renamed UNPROCESSABLE_ENTITY → UNPROCESSABLE_CONTENT.
+_UNPROCESSABLE = getattr(
+    status, "HTTP_422_UNPROCESSABLE_CONTENT", status.HTTP_422_UNPROCESSABLE_ENTITY
+)
 ALLOWED_IMAGE_TYPES = {
     "image/png": "image/png",
     "image/jpeg": "image/jpeg",
@@ -43,7 +47,7 @@ async def analyze_document(
 ) -> DocumentAnalyzeResponse:
     if (text is None or not text.strip()) and file is None:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=_UNPROCESSABLE,
             detail="At least one of text or file is required",
         )
 
@@ -52,7 +56,7 @@ async def analyze_document(
         cleaned_text = text.strip()
         if len(cleaned_text) > MAX_TEXT_CHARS:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=_UNPROCESSABLE,
                 detail=f"text must be at most {MAX_TEXT_CHARS} characters",
             )
 
@@ -62,19 +66,23 @@ async def analyze_document(
         content_type = (file.content_type or "").lower()
         if content_type not in ALLOWED_IMAGE_TYPES:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=_UNPROCESSABLE,
                 detail="file must be an image of type png, jpg, or webp",
             )
         image_mime = ALLOWED_IMAGE_TYPES[content_type]
         image_bytes = await file.read()
         if len(image_bytes) > MAX_IMAGE_BYTES:
             raise HTTPException(
-                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                status_code=getattr(
+                    status,
+                    "HTTP_413_CONTENT_TOO_LARGE",
+                    status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                ),
                 detail="file exceeds maximum size of 5 MB",
             )
         if not image_bytes:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=_UNPROCESSABLE,
                 detail="file is empty",
             )
 
