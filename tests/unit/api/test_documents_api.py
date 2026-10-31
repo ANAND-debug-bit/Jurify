@@ -237,6 +237,60 @@ def test_ask_success() -> None:
     assert ask_kwargs["thinking"] is False
 
 
+def test_analyze_id_stored_equals_returned_and_ask_accepts_it() -> None:
+    """Regression: returned analysis_id must be stored (never 'pending') and work for /ask."""
+    gemma = _fake_gemma(
+        generate_structured=AsyncMock(
+            side_effect=[
+                AnalyzeLLMResult(
+                    document_type="rental_agreement",
+                    plain_summary="Lease.",
+                    key_clauses=[],
+                    risk_flags=[],
+                    questions_to_ask=["Q1", "Q2", "Q3"],
+                ),
+                AskLLMResult(
+                    answer="Deposit is refundable.",
+                    evidence_quotes=["Deposit refundable"],
+                    confidence="medium",
+                ),
+            ]
+        )
+    )
+    app.dependency_overrides[get_gemma_service] = lambda: gemma
+    client = TestClient(app)
+    analyze = client.post(
+        "/api/v1/documents/analyze",
+        data={"text": "Pay 10k. Deposit refundable.", "language": "en"},
+    )
+    assert analyze.status_code == 200
+    aid = analyze.json()["analysis_id"]
+    assert aid
+    assert aid != "pending"
+    stored = get_analysis_store().get(aid)
+    assert stored is not None
+    assert stored.analysis.analysis_id == aid
+    ask = client.post(
+        "/api/v1/documents/ask",
+        json={"analysis_id": aid, "question": "Is the deposit refundable?", "language": "en"},
+    )
+    assert ask.status_code == 200
+
+
+def test_openapi_lists_exactly_contract_endpoints() -> None:
+    client = TestClient(app)
+    schema = client.get("/openapi.json").json()
+    paths = schema["paths"]
+    assert set(paths.keys()) == {
+        "/health",
+        "/api/v1/documents/analyze",
+        "/api/v1/documents/ask",
+    }
+    assert "get" in paths["/health"]
+    assert "post" in paths["/api/v1/documents/analyze"]
+    assert "post" in paths["/api/v1/documents/ask"]
+
+
 def test_ask_gemma_failure_502() -> None:
     gemma = _fake_gemma(
         generate_structured=AsyncMock(

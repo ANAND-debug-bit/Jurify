@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import uuid
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
@@ -113,9 +114,11 @@ async def analyze_document(
 
     verified_flags = filter_verified_risk_flags(llm_result.risk_flags, cleaned_text)
     settings = get_settings()
-    # Placeholder id until stored; create() assigns the final id.
+    # Assign the real id before store.write so the returned/stored ids never diverge
+    # (never expose a "pending" placeholder to clients).
+    analysis_id = str(uuid.uuid4())
     draft = AnalyzeResponse(
-        analysis_id="pending",
+        analysis_id=analysis_id,
         document_type=llm_result.document_type,
         plain_summary=llm_result.plain_summary,
         key_clauses=llm_result.key_clauses,
@@ -131,7 +134,9 @@ async def analyze_document(
     else:
         source_for_qa = build_qa_context_from_analysis(draft)
 
-    return store.create(source_text=source_for_qa, analysis=draft)
+    return store.create(
+        source_text=source_for_qa, analysis=draft, analysis_id=analysis_id
+    )
 
 
 @router.post("/ask", response_model=AskResponse)
