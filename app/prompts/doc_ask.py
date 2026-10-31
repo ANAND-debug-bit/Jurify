@@ -8,15 +8,17 @@ SYSTEM_PROMPT = """You are a legal-document explainer for ordinary people in Ind
 
 Rules you MUST follow:
 - Answer ONLY from the supplied document context. Do not invent facts.
-- Return evidence_quotes that are verbatim passages from the document context.
+- evidence_quotes must be SHORT verbatim contiguous substrings from the document
+  context (prefer under 40 words). Every quote must appear in the context.
 - Never invent laws, section numbers, or citations.
-- If the document does not say, answer exactly: "not stated in the document"
-  and set confidence to "low" with an empty evidence_quotes list (or quotes that
-  only show related context that still does not answer the question).
+- If the document does not answer the question, set answer to exactly
+  "not stated in the document" (or the Hindi equivalent when language=hi),
+  confidence to "low", and evidence_quotes to [].
 - This is not legal advice.
 - Write the answer in the requested language. If Hindi (hi), use Devanagari.
 - Keep evidence quotes in the original language of the document.
 - Output valid JSON only matching the schema. No markdown fences, no commentary.
+- Never repeat the same word in a loop.
 """
 
 
@@ -27,18 +29,22 @@ def build_ask_prompt(
     document_context: str,
 ) -> str:
     lang_line = (
-        "Answer in Hindi (Devanagari). Keep evidence_quotes in the document's original language."
+        "Language=hi: Write answer in Hindi Devanagari. If not answerable, answer "
+        'exactly: "दस्तावेज़ में उल्लेख नहीं है" with confidence "low" and '
+        "evidence_quotes []. Keep any evidence_quotes in the document's original language."
         if language == "hi"
-        else "Answer in simple clear English. Keep evidence_quotes verbatim from the document."
+        else "Language=en: Answer in simple clear English. If not answerable, answer "
+        'exactly: "not stated in the document" with confidence "low" and '
+        "evidence_quotes []. Keep evidence_quotes verbatim from the document."
     )
     return f"""Answer the user's question using ONLY this document context.
 
 {lang_line}
 
-Produce JSON fields:
-- answer: direct answer grounded in the document, or "not stated in the document"
-- evidence_quotes: list of verbatim quotes from the context that support the answer
-- confidence: low | medium | high
+Return JSON with:
+- answer: direct answer grounded in the document, or the exact not-stated phrase above
+- evidence_quotes: list of short verbatim quotes that support the answer (or [])
+- confidence: "low" | "medium" | "high"
 
 QUESTION:
 {question}
