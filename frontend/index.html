@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f6f5f0">
+    <meta name="description" content="Understand legal documents with Gemma 4.">
+    <title>Jurify — Legal document intelligence</title>
+    <link rel="stylesheet" href="./style.css">
+    <script src="./app.js" defer></script>
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar">
+        <a class="brand" href="#" aria-label="Jurify home">
+          <span class="brand-mark" aria-hidden="true">J</span>
+          <span>jurify<span class="brand-period">.</span></span>
+        </a>
+        <div class="topbar-note"><span class="live-dot"></span> LEGAL DOCUMENT INTELLIGENCE</div>
+        <a class="header-link" href="#about">About this demo <span aria-hidden="true">↗</span></a>
+      </header>
+
+      <main>
+        <section class="intro" aria-labelledby="page-title">
+          <div class="eyebrow"><span class="eyebrow-line"></span> CLARITY, BEFORE YOU SIGN</div>
+          <h1 id="page-title">Make the fine print<br><span class="title-accent">feel less fine.</span></h1>
+          <p class="intro-copy">Understand what your legal documents actually say. Upload a scan or paste the text - get a plain-language breakdown, potential risks, and better questions to ask.</p>
+        </section>
+
+        <div class="workspace">
+          <section class="input-panel panel" aria-labelledby="input-title">
+            <div class="panel-heading">
+              <div>
+                <span class="step-label">01 / YOUR DOCUMENT</span>
+                <h2 id="input-title">Start with the document</h2>
+              </div>
+              <span class="paper-icon" aria-hidden="true">✳</span>
+            </div>
+
+            <label class="field-label" for="document-text">Paste document text</label>
+            <textarea id="document-text" maxlength="20000" placeholder="Paste a rental agreement, legal notice, or contract here..." aria-describedby="text-help char-count"></textarea>
+            <div class="textarea-meta">
+              <span id="text-help">Your document stays yours. No account needed.</span>
+              <span id="char-count">0 / 20,000</span>
+            </div>
+
+            <div class="or-divider"><span>OR ADD A PHOTO / SCAN</span></div>
+            <label id="drop-zone" class="drop-zone" for="document-file" tabindex="0">
+              <input id="document-file" type="file" accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp" hidden>
+              <span class="upload-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M4 15.5v3A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5v-3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </span>
+              <span class="drop-copy"><strong>Drop your document here</strong><span>or <span class="browse-link">browse files</span></span></span>
+              <span class="drop-hint">PNG, JPG or WEBP · up to 5 MB</span>
+            </label>
+            <div id="file-preview" class="file-preview" hidden>
+              <img id="preview-image" alt="Selected document preview">
+              <div class="file-info"><strong id="file-name"></strong><span id="file-size"></span></div>
+              <button id="remove-file" class="icon-button" type="button" aria-label="Remove selected image">×</button>
+            </div>
+
+            <div class="input-controls">
+              <fieldset class="language-field">
+                <legend class="field-label">Explain in</legend>
+                <div class="language-toggle">
+                  <label><input type="radio" name="language" value="en" checked><span>English</span></label>
+                  <label><input type="radio" name="language" value="hi"><span>हिन्दी</span></label>
+                </div>
+              </fieldset>
+              <button id="sample-button" class="sample-button" type="button"><span aria-hidden="true">✦</span> Try sample document</button>
+            </div>
+
+            <p id="form-error" class="inline-error" role="alert" hidden></p>
+            <button id="analyze-button" class="primary-button" type="button">
+              <span>Analyze with Gemma 4</span><span class="button-arrow" aria-hidden="true">→</span>
+            </button>
+            <p class="secure-note"><span aria-hidden="true">⌑</span> Your document is analyzed for this session only.</p>
+          </section>
+
+          <section class="results-column" aria-label="Document analysis">
+            <div id="empty-state" class="empty-state panel">
+              <div class="empty-art" aria-hidden="true">
+                <span class="art-sun"></span><span class="art-page"><i></i><i></i><i></i><b></b></span>
+                <span class="art-spark spark-one">✳</span><span class="art-spark spark-two">✦</span>
+              </div>
+              <span class="step-label">YOUR CLARITY, AT A GLANCE</span>
+              <h2>One document.<br>Much more clarity.</h2>
+              <p>Your breakdown will appear here - key clauses, potential risks, and questions worth asking.</p>
+              <div class="empty-points"><span><i>01</i> Plain-English summary</span><span><i>02</i> Risky clauses, highlighted</span><span><i>03</i> Questions for your advisor</span></div>
+            </div>
+
+            <div id="loading-state" class="loading-state panel" hidden aria-live="polite">
+              <div class="loading-orbit"><span></span><i></i></div>
+              <span class="step-label">A LITTLE PATIENCE, A LOT MORE CLARITY</span>
+              <h2>Gemma 4 is reading<br>your document<span class="loading-dots">...</span></h2>
+              <p>Looking closely at the details that matter.</p>
+              <div class="timer"><span class="timer-dot"></span><span id="elapsed-time">0</span> seconds</div>
+              <div class="skeleton-lines" aria-hidden="true"><i></i><i></i><i></i></div>
+            </div>
+
+            <div id="error-state" class="error-state panel" role="alert" hidden>
+              <span class="error-symbol" aria-hidden="true">!</span>
+              <span class="step-label">THAT DIDN'T GO AS PLANNED</span>
+              <h2 id="error-title">We couldn't analyze this document.</h2>
+              <p id="error-message"></p>
+              <button id="retry-button" class="secondary-button" type="button">Try again <span aria-hidden="true">↻</span></button>
+            </div>
+
+            <div id="results-state" hidden>
+              <div class="result-header">
+                <div><span class="step-label">02 / YOUR BREAKDOWN</span><div class="doc-type-row"><h2 id="document-type"></h2><span class="analyzed-tag"><i></i> ANALYZED</span></div></div>
+                <span id="model-badge" class="model-badge"><span aria-hidden="true">✦</span> Powered by Gemma 4 <small>(open weights)</small></span>
+              </div>
+
+              <article class="summary-card">
+                <div class="section-title"><span class="section-icon summary-icon" aria-hidden="true">↗</span><div><span class="step-label">THE SHORT VERSION</span><h3>In plain language</h3></div></div>
+                <p id="plain-summary"></p>
+              </article>
+
+              <section class="result-section">
+                <div class="section-title"><span class="section-icon clause-icon" aria-hidden="true">§</span><div><span class="step-label">WHAT'S INSIDE</span><h3>Key clauses <span id="clause-count" class="count-badge"></span></h3></div></div>
+                <div id="clauses-list" class="clauses-list"></div>
+              </section>
+
+              <section class="result-section risks-section">
+                <div class="section-title"><span class="section-icon risk-icon" aria-hidden="true">!</span><div><span class="step-label">WORTH A CLOSER LOOK</span><h3>Potential risk flags <span id="risk-count" class="count-badge"></span></h3></div></div>
+                <p class="section-hint">Select a quoted passage to find it in your pasted document.</p>
+                <div id="risks-list" class="risks-list"></div>
+              </section>
+
+              <section class="result-section questions-section">
+                <div class="section-title"><span class="section-icon question-icon" aria-hidden="true">?</span><div><span class="step-label">BEFORE YOU SIGN</span><h3>Questions to ask</h3></div></div>
+                <ul id="questions-list" class="questions-list"></ul>
+              </section>
+
+              <section id="ask-section" class="ask-section">
+                <div class="ask-heading">
+                  <div class="section-title"><span class="section-icon ask-icon" aria-hidden="true">✳</span><div><span class="step-label">KEEP THE CONVERSATION GOING</span><h3>Ask about this document</h3></div></div>
+                </div>
+                <div class="suggested-questions" aria-label="Suggested questions">
+                  <button type="button" class="question-chip">What is the notice period?</button>
+                  <button type="button" class="question-chip">Can the landlord keep my deposit?</button>
+                  <button type="button" class="question-chip">What happens if I leave early?</button>
+                </div>
+                <div id="chat-messages" class="chat-messages" aria-live="polite"></div>
+                <form id="ask-form" class="ask-form">
+                  <label class="visually-hidden" for="ask-input">Ask a question about this document</label>
+                  <input id="ask-input" type="text" maxlength="1000" placeholder="Ask a question about your document..." autocomplete="off" required>
+                  <button type="submit" aria-label="Send question"><span aria-hidden="true">↑</span></button>
+                </form>
+              </section>
+              <p id="disclaimer" class="disclaimer"></p>
+            </div>
+          </section>
+        </div>
+
+        <section id="about" class="about-strip">
+          <span class="about-mark" aria-hidden="true">✳</span>
+          <p><strong>Why Gemma?</strong> Open-weight AI brings more choice and control to sensitive legal documents - your information deserves a more private path.</p>
+          <span class="about-label">BUILT FOR CLARITY</span>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <span>JURIFY <i>·</i> LEGAL DOCUMENT INTELLIGENCE</span>
+        <label class="api-base-label" for="api-base">API base <input id="api-base" type="url" aria-label="API base URL" spellcheck="false"></label>
+        <span class="footer-note">A clearer first step, not the final word.</span>
+      </footer>
+    </div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>
