@@ -7,6 +7,7 @@ from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 
+from app.api.v1.settings_local import analyze_thinking_enabled
 from app.api.v1.store import (
     AnalysisStore,
     build_qa_context_from_analysis,
@@ -104,7 +105,7 @@ async def analyze_document(
             AnalyzeLLMResult,
             system=ANALYZE_SYSTEM,
             image=image_arg,
-            thinking=True,
+            thinking=analyze_thinking_enabled(),
         )
     except GemmaError as exc:
         raise HTTPException(

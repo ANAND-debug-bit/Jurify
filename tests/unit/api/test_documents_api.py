@@ -110,7 +110,8 @@ def test_analyze_text_success() -> None:
     assert body["analysis_id"]
     gemma.generate_structured.assert_awaited_once()
     call_kwargs = gemma.generate_structured.await_args.kwargs
-    assert call_kwargs["thinking"] is True
+    # Default ANALYZE_THINKING is OFF after live latency measurement.
+    assert call_kwargs["thinking"] is False
     assert call_kwargs["image"] is None
 
 
@@ -138,7 +139,7 @@ def test_analyze_with_image_success() -> None:
     assert body["document_type"] == "notice"
     assert body["analysis_id"]
     call_kwargs = gemma.generate_structured.await_args.kwargs
-    assert call_kwargs["thinking"] is True
+    assert call_kwargs["thinking"] is False
     assert call_kwargs["image"] is not None
     assert call_kwargs["image"][1] == "image/png"
 
@@ -275,6 +276,29 @@ def test_analyze_id_stored_equals_returned_and_ask_accepts_it() -> None:
         json={"analysis_id": aid, "question": "Is the deposit refundable?", "language": "en"},
     )
     assert ask.status_code == 200
+
+
+def test_analyze_thinking_env_override(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("ANALYZE_THINKING", "1")
+    gemma = _fake_gemma(
+        generate_structured=AsyncMock(
+            return_value=AnalyzeLLMResult(
+                document_type="rental_agreement",
+                plain_summary="Lease.",
+                key_clauses=[],
+                risk_flags=[],
+                questions_to_ask=["Q1", "Q2", "Q3"],
+            )
+        )
+    )
+    app.dependency_overrides[get_gemma_service] = lambda: gemma
+    client = TestClient(app)
+    resp = client.post(
+        "/api/v1/documents/analyze",
+        data={"text": "Pay 10k monthly.", "language": "en"},
+    )
+    assert resp.status_code == 200
+    assert gemma.generate_structured.await_args.kwargs["thinking"] is True
 
 
 def test_openapi_lists_exactly_contract_endpoints() -> None:
