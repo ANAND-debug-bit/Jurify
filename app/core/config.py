@@ -65,11 +65,16 @@ class JWTSettings(BaseSettings):
 class LLMSettings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    llm_provider: Literal["ollama", "vllm"] = "ollama"
-    gemma_model_name: str = "gemma3n"
+    # "gemini" = Gemma 4 via Google GenAI / Gemini API (hackday demo path).
+    llm_provider: Literal["ollama", "vllm", "gemini"] = "ollama"
+    # Default: Gemma 4 26B A4B (faster). Fallback model id: gemma-4-31b-it.
+    gemma_model_name: str = "gemma-4-26b-a4b-it"
+    gemma_fallback_model_name: str = "gemma-4-31b-it"
     ollama_base_url: str = "http://localhost:11434"
     vllm_base_url: str = "http://localhost:8001"
     embedding_model: str = "nomic-embed-text"
+    # Read only from .env / environment — never hardcode. Owner inserts the key.
+    google_api_key: SecretStr | None = None
 
 
 class VectorDBSettings(BaseSettings):
