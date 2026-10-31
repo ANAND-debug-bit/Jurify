@@ -29,6 +29,7 @@ def test_settings_load_with_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
         "LLM_PROVIDER",
         "GEMMA_MODEL_NAME",
         "GEMMA_FALLBACK_MODEL_NAME",
+        "GEMMA_FALLBACK_MODEL",
         "GOOGLE_API_KEY",
     ):
         monkeypatch.delenv(var, raising=False)
@@ -44,9 +45,11 @@ def test_settings_load_with_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     assert settings.environment == "dev"
     assert settings.database.postgres_db == "nyayaos"
     assert settings.redis.redis_host == "localhost"
+    assert settings.cors_origins == ["*"]
     assert settings.llm.llm_provider == "ollama"
     assert settings.llm.gemma_model_name == "gemma-4-26b-a4b-it"
     assert settings.llm.gemma_fallback_model_name == "gemma-4-31b-it"
+    assert settings.llm.gemma_fallback_model == "gemma-4-31b-it"
     assert settings.llm.google_api_key is None
     assert settings.i18n.default_language == "en"
     assert "hi" in settings.i18n.supported_languages
